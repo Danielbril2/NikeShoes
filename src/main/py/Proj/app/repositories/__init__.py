@@ -1,2 +1,5 @@
-from app.repositories.user_repository import UserRepository
-from app.repositories.shoe_repository import ShoeRepository
+#from app.repositories.user_repository import UserRepository
+#from app.repositories.shoe_repository import ShoeRepository
+
+from app.repositories.mongo_user_repository import MongoUserRepository
+from app.repositories.mongo_shoe_repository import MongoShoeRepository
