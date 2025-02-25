@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const AUTH_BASE_URL = 'http://localhost:8080/auth';
+//const AUTH_BASE_URL = 'http://localhost:8080/auth';
+const AUTH_BASE_URL = "https://nikewarehouseshoemanager.onrender.com/auth"
 
 interface AuthResponse {
     token: string;
