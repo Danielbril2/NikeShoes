@@ -1,11 +1,14 @@
 from flask import Flask
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
+from flask_pymongo import PyMongo
+
+# from flask_sqlalchemy import SQLAlchemy
 
 from app.config import Config
 
 # Initialize SQLAlchemy
-db = SQLAlchemy()
+#db = SQLAlchemy()
+mongo = PyMongo()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -13,7 +16,8 @@ def create_app(config_class=Config):
     
     # Initialize extensions
     CORS(app)
-    db.init_app(app)
+    #db.init_app(app)
+    mongo.init_app(app)
     
     # Register blueprints
     from app.controllers.auth_controller import auth_bp
@@ -23,7 +27,7 @@ def create_app(config_class=Config):
     app.register_blueprint(shoe_bp, url_prefix='/main')
     
     # Create database tables
-    with app.app_context():
-        db.create_all()
+    #with app.app_context():
+        #db.create_all()
         
     return app
