@@ -43,7 +43,7 @@ def token_required(f):
                 # For this special case, we don't require the user to exist in the database
                 # This matches the behavior of the original code
                 from app.models.mongo_models import MongoUser
-                dummy_user = MongoUser(worker_code=worker_code, password="dummy")
+                dummy_user = {'worker_code': worker_code}
                 return f(dummy_user, *args, **kwargs)
                 
             # Normal case - verify user exists in database
