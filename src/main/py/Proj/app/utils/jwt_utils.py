@@ -2,7 +2,7 @@ import jwt
 from functools import wraps
 from datetime import datetime, timedelta
 from flask import request, jsonify, current_app
-from app.repositories.user_repository import UserRepository
+from app.repositories.mongo_user_repository import MongoUserRepository
 
 def generate_token(worker_code):
     """Generate a JWT token for a user"""
@@ -42,12 +42,12 @@ def token_required(f):
             if worker_code.startswith("52500"):
                 # For this special case, we don't require the user to exist in the database
                 # This matches the behavior of the original code
-                from app.models.user import User
-                dummy_user = User(worker_code=worker_code, password="dummy")
+                from app.models.mongo_models import MongoUser
+                dummy_user = MongoUser(worker_code=worker_code, password="dummy")
                 return f(dummy_user, *args, **kwargs)
                 
             # Normal case - verify user exists in database
-            current_user = UserRepository.find_by_worker_code(worker_code)
+            current_user = MongoUserRepository.find_by_worker_code(worker_code)
             if not current_user:
                 raise ValueError("User not found")
                 
