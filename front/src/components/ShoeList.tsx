@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoeAPI, Shoe, ShoeType } from '../API/RestAPI';
 import { Search } from 'lucide-react';
-import { AuthAPI } from '../API/AuthAPI';
+import { AuthAPI } from '../API/authAPI';
 
 const ShoeList = () => {
   const [shoes, setShoes] = useState<Shoe[]>([]);
