@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AuthAPI } from './AuthAPI';
+import { AuthAPI } from './authAPI';
 
 // Types
 export type ShoeType = 'Man' | 'Woman' | 'Children';
@@ -8,6 +8,7 @@ export interface Shoe {
     code: string;
     loc: number;
     name: string;
+    type: string;
     image: ArrayBuffer;
 }
 
@@ -18,7 +19,8 @@ export interface ShoeDTO {
 }
 
 // API Base URL
-const BASE_URL = 'http://localhost:8080/main';
+//const BASE_URL = 'http://localhost:8080/main';
+const BASE_URL = "https://nikewarehouseshoemanager.onrender.com/main"
 
 // API Endpoints
 const ENDPOINTS = {
