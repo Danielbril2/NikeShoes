@@ -10,15 +10,27 @@ def generate_token(worker_code):
         'worker_code': worker_code,
         'exp': datetime.utcnow() + timedelta(days=1)
     }
+    
+    # Ensure SECRET_KEY is a string
+    secret_key = current_app.config['SECRET_KEY']
+    if isinstance(secret_key, bytes):
+        secret_key = secret_key.decode('utf-8')
+    
     token = jwt.encode(
         payload, 
-        current_app.config['SECRET_KEY'],
+        secret_key,
         algorithm="HS256"
     )
+    
+    # Convert token to string if it's bytes (PyJWT v1.x returns bytes, v2.x returns str)
+    if isinstance(token, bytes):
+        token = token.decode('utf-8')
+    
     return {
         'token': token,
         'expirationTime': (datetime.utcnow() + timedelta(days=1)).timestamp() * 1000
     }
+
 
 def token_required(f):
     """Decorator to verify JWT token on protected routes"""
@@ -29,7 +41,10 @@ def token_required(f):
             return jsonify({'message': 'Token is missing'}), 401
         
         try:
-            token = token.split('Bearer ')[1]
+            
+            if token.startswith('Bearer '):
+                token = token.split('Bearer ')[1]
+
             data = jwt.decode(
                 token, 
                 current_app.config['SECRET_KEY'], 
