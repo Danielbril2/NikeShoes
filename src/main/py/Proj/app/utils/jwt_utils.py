@@ -41,28 +41,38 @@ def token_required(f):
             return jsonify({'message': 'Token is missing'}), 401
         
         try:
-            
+
             if token.startswith('Bearer '):
                 token = token.split('Bearer ')[1]
 
-            data = jwt.decode(
-                token, 
-                current_app.config['SECRET_KEY'], 
-                algorithms=["HS256"]
-            )
+            print("Step 1 complete")
+
+            try:
+                data = jwt.decode(
+                    token, 
+                    current_app.config['SECRET_KEY'], 
+                    algorithms=["HS256"]
+                )
+                print("Step 2 complete")
+            except Exception as e:
+                print(f"Error during decode: {str(e)}")
+                raise e
             
-            worker_code = data['worker_code']
+            try:
+                worker_code = data['worker_code']
+                print("Step 3 coplete")
+            except Exception as e:
+                print(f"Error during getting worker code: {str(e)}")
+                raise e
             
-            # Special case for worker codes starting with "52500"
-            #if worker_code.startswith("52500"):
-                # For this special case, we don't require the user to exist in the database
-                # This matches the behavior of the original code
-                #from app.models.mongo_models import MongoUser
-                #dummy_user = {'worker_code': worker_code}
-                #return f(dummy_user, *args, **kwargs)
-                
             # Normal case - verify user exists in database
-            current_user = MongoUserRepository.find_by_worker_code(worker_code)
+            try:
+                current_user = MongoUserRepository.find_by_worker_code(worker_code)
+                print("Step 4 complete")
+            except Exception as e:
+                print(f"Error during getting user: {str(e)}")
+                raise e
+            
             if not current_user:
                 raise ValueError("User not found")
                 
