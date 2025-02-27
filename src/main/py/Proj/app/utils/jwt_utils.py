@@ -78,8 +78,16 @@ def token_required(f):
             
             if not current_user:
                 raise ValueError("User not found")
-                
-            return f(current_user, *args, **kwargs)
+                        
+            try:
+                return f(current_user, *args, **kwargs)
+            except TypeError as e:
+                print(f"Type error with current_user: {str(e)}")
+                # Try another format if MongoDB returns a string
+                if isinstance(current_user.get('worker_code'), str):
+                    worker_code_bytes = current_user['worker_code'].encode('utf-8')
+                    return f(worker_code_bytes, *args, **kwargs)
+
         except Exception as e:
             print(f"Token validation error: {str(e)}")  # Add logging for debugging
             return jsonify({'message': 'Token is invalid'}), 401
