@@ -1,17 +1,61 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../API/AuthContext';
 import { AuthAPI } from '../API/authAPI';
 
-const Login: React.FC = () => {
-  const [workerCode, setWorkerCode] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [error, setError] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
+const Login = () => {
+  const [workerCode, setWorkerCode] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [autoLoginChecked, setAutoLoginChecked] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const location = useLocation();
+  const { login, isAuthenticated } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    // Check if user was redirected from registration
+    if (location.state?.registered) {
+      setError('');
+      // Set a success message if coming from successful registration
+      const registrationMessage = document.getElementById('registration-success');
+      if (registrationMessage) {
+        registrationMessage.classList.remove('hidden');
+      }
+    }
+
+    // Try automatic login with stored token
+    const checkStoredToken = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token && !autoLoginChecked) {
+          setAutoLoginChecked(true);
+          
+          // Verify the token is still valid
+          const isValid = await AuthAPI.verifyToken(token);
+          if (isValid) {
+            login(token);
+            navigate('/');
+          }
+        }
+      } catch (err) {
+        console.error('Auto-login error:', err);
+        // Token is invalid, we'll just show the login form
+        localStorage.removeItem('token');
+      }
+    };
+
+    checkStoredToken();
+  }, [login, navigate, location.state, autoLoginChecked]);
+
+  // If already authenticated, redirect to home
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -27,6 +71,14 @@ const Login: React.FC = () => {
     }
   };
 
+  if (loading && !autoLoginChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8" dir="rtl">
       <div className="max-w-md w-full space-y-8">
@@ -38,6 +90,11 @@ const Login: React.FC = () => {
             אנא התחבר עם פרטי העובד שלך
           </p>
         </div>
+        
+        <div id="registration-success" className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative hidden">
+          <span className="block sm:inline">הרשמה בוצעה בהצלחה! אנא התחבר למערכת</span>
+        </div>
+        
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
@@ -70,7 +127,7 @@ const Login: React.FC = () => {
                 type="password"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="מספר עובד של האחמש האהוב עליך בסניף"
+                placeholder="סיסמה"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -85,6 +142,12 @@ const Login: React.FC = () => {
             >
               {loading ? 'מתחבר...' : 'התחבר'}
             </button>
+          </div>
+          
+          <div className="text-center">
+            <Link to="/register" className="text-blue-500 hover:text-blue-600">
+              אין לך חשבון עדיין? הירשם עכשיו
+            </Link>
           </div>
         </form>
       </div>

@@ -24,6 +24,7 @@ conn.row_factory = sqlite3.Row
 
 # Migrate Shoes
 c = conn.cursor()
+'''
 c.execute('SELECT * FROM shoe')
 shoes = c.fetchall()
 
@@ -36,7 +37,7 @@ for shoe in shoes:
         'image': base64.b64encode(shoe['image']).decode('utf-8') if shoe['image'] else None
     }
     db.shoes.insert_one(shoe_dict)
-
+'''
 # Migrate Users
 c.execute('SELECT * FROM user')
 users = c.fetchall()

@@ -8,6 +8,7 @@ import ShoeList from './components/ShoeList';
 import AddShoe from './components/AddShoe';
 import EditShoe from './components/EditShoe';
 import Login from './components/Login';
+import Register from './components/Register';
 import CloseShoes from './components/CloseShoe';
 import './App.css';
 
@@ -18,6 +19,7 @@ function App() {
         <div className="app">
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
             {/* Protected Routes */}
             <Route

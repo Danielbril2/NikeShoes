@@ -29,8 +29,8 @@ class AuthService:
     def login(worker_code, password):
         """Authenticate a user and return a token"""
         # Special case for worker codes starting with 52500
-        if worker_code.startswith("52500") and AuthService.confirm_password(password):
-            return generate_token(worker_code), 200
+        #if worker_code.startswith("52500") and AuthService.confirm_password(password):
+            #return generate_token(worker_code), 200
         
         # Normal authentication flow
         user = MongoUserRepository.find_by_worker_code(worker_code)
