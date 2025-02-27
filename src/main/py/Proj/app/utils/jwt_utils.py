@@ -37,6 +37,9 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = request.headers.get('Authorization')
+        print(f"Authorization header: {token}")
+        print(f"Header type: {type(token)}")
+
         if not token:
             return jsonify({'message': 'Token is missing'}), 401
         
