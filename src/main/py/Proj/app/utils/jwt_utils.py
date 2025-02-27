@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from flask import request, jsonify, current_app
 from app.repositories.mongo_user_repository import MongoUserRepository
 
+# Update this function in jwt_utils.py
 def generate_token(worker_code):
     """Generate a JWT token for a user"""
     payload = {
@@ -11,18 +12,21 @@ def generate_token(worker_code):
         'exp': datetime.utcnow() + timedelta(days=1)
     }
     
-    # Ensure SECRET_KEY is a string
+    # Get the secret key
     secret_key = current_app.config['SECRET_KEY']
-    if isinstance(secret_key, bytes):
-        secret_key = secret_key.decode('utf-8')
     
+    # Ensure secret key is bytes
+    if isinstance(secret_key, str):
+        secret_key = secret_key.encode('utf-8')
+    
+    # Generate token
     token = jwt.encode(
         payload, 
         secret_key,
         algorithm="HS256"
     )
     
-    # Convert token to string if it's bytes (PyJWT v1.x returns bytes, v2.x returns str)
+    # Ensure token is string
     if isinstance(token, bytes):
         token = token.decode('utf-8')
     
@@ -37,59 +41,43 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = request.headers.get('Authorization')
-        print(f"Authorization header: {token}")
-        print(f"Header type: {type(token)}")
-
+        
         if not token:
             return jsonify({'message': 'Token is missing'}), 401
         
         try:
-
             if token.startswith('Bearer '):
                 token = token.split('Bearer ')[1]
-
-            print("Step 1 complete")
-
-            try:
-                data = jwt.decode(
-                    token, 
-                    current_app.config['SECRET_KEY'], 
-                    algorithms=["HS256"]
-                )
-                print("Step 2 complete")
-            except Exception as e:
-                print(f"Error during decode: {str(e)}")
-                raise e
             
-            try:
-                worker_code = data['worker_code']
-                print("Step 3 coplete")
-            except Exception as e:
-                print(f"Error during getting worker code: {str(e)}")
-                raise e
+            # Get the secret key
+            secret_key = current_app.config['SECRET_KEY']
             
-            # Normal case - verify user exists in database
-            try:
-                current_user = MongoUserRepository.find_by_worker_code(worker_code)
-                print("Step 4 complete")
-            except Exception as e:
-                print(f"Error during getting user: {str(e)}")
-                raise e
+            # Ensure secret key is bytes
+            if isinstance(secret_key, str):
+                secret_key = secret_key.encode('utf-8')
             
+            # Decode token
+            data = jwt.decode(
+                token, 
+                secret_key,
+                algorithms=["HS256"]
+            )
+            
+            worker_code = data['worker_code']
+            
+            # For worker codes starting with "52500"
+            if worker_code.startswith("52500"):
+                return f({'worker_code': worker_code}, *args, **kwargs)
+            
+            # Normal case
+            current_user = MongoUserRepository.find_by_worker_code(worker_code)
             if not current_user:
                 raise ValueError("User not found")
-                        
-            try:
-                return f(current_user, *args, **kwargs)
-            except TypeError as e:
-                print(f"Type error with current_user: {str(e)}")
-                # Try another format if MongoDB returns a string
-                if isinstance(current_user.get('worker_code'), str):
-                    worker_code_bytes = current_user['worker_code'].encode('utf-8')
-                    return f(worker_code_bytes, *args, **kwargs)
-
+            
+            return f(current_user, *args, **kwargs)
+                
         except Exception as e:
-            print(f"Token validation error: {str(e)}")  # Add logging for debugging
+            print(f"Token validation error: {str(e)}")
             return jsonify({'message': 'Token is invalid'}), 401
         
     return decorated

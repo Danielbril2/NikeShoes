@@ -7,6 +7,8 @@ shoe_bp = Blueprint('shoe', __name__)
 @shoe_bp.route('/getAllShoes', methods=['GET'])
 @token_required
 def get_all_shoes(current_user):
+    print(f"User in route: {current_user}")
+    print(f"User type: {type(current_user)}")
     shoes = ShoeService.get_all_shoes()
     return jsonify(shoes)
 
