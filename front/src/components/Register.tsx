@@ -4,8 +4,8 @@ import { AuthAPI } from '../API/authAPI';
 
 const Register = () => {
   const [workerCode, setWorkerCode] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  //const [password, setPassword] = useState('');
+  //const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -25,15 +25,15 @@ const Register = () => {
     }
 
     // Validate password match
-    if (password !== confirmPassword) {
-      setError('הסיסמאות אינן תואמות');
-      return;
-    }
+    //if (password !== confirmPassword) {
+    //  setError('הסיסמאות אינן תואמות');
+    //  return;
+    //}
 
     setLoading(true);
 
     try {
-      const response = await AuthAPI.register(workerCode, password);
+      const response = await AuthAPI.register(workerCode, "52500219");
       
       if (response.success) {
         // Registration successful, redirect to login
@@ -81,36 +81,6 @@ const Register = () => {
                 onChange={(e) => setWorkerCode(e.target.value)}
               />
             </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                סיסמה
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="סיסמה"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="confirm-password" className="sr-only">
-                אימות סיסמה
-              </label>
-              <input
-                id="confirm-password"
-                name="confirm-password"
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="אימות סיסמה"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
           </div>
 
           <div>
@@ -125,7 +95,7 @@ const Register = () => {
           
           <div className="text-center">
             <Link to="/login" className="text-blue-500 hover:text-blue-600">
-              כבר יש לך חשבון? לחץ כאן להתחברות
+              אם זו לא הפעם הראשונה שאתה מבקר באתר - לחץ כאן
             </Link>
           </div>
         </form>

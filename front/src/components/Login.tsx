@@ -119,7 +119,7 @@ const Login = () => {
             </div>
             <div>
               <label htmlFor="password" className="sr-only">
-                סיסמה
+                מספר עובד של האחמש האהוב עליך
               </label>
               <input
                 id="password"
@@ -127,7 +127,7 @@ const Login = () => {
                 type="password"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="סיסמה"
+                placeholder="מספר עובד של האחמש האהוב עליך"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -146,7 +146,7 @@ const Login = () => {
           
           <div className="text-center">
             <Link to="/register" className="text-blue-500 hover:text-blue-600">
-              אין לך חשבון עדיין? הירשם עכשיו
+              במידה וזאת פעם ראשונה שאתם נכנסים לאתר - נא להירשם כאן
             </Link>
           </div>
         </form>
