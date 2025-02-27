@@ -64,11 +64,7 @@ def token_required(f):
             )
             
             worker_code = data['worker_code']
-            
-            # For worker codes starting with "52500"
-            if worker_code.startswith("52500"):
-                return f({'worker_code': worker_code}, *args, **kwargs)
-            
+                        
             # Normal case
             current_user = MongoUserRepository.find_by_worker_code(worker_code)
             if not current_user:

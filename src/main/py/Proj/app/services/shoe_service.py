@@ -10,7 +10,9 @@ class ShoeService:
     @staticmethod
     def create_shoe_dto(mongo_shoe):
         """Convert a MongoDB shoe document to a DTO with base64 encoded image"""
-        image_str = base64.b64encode(mongo_shoe.get('image')).decode('utf-8') if mongo_shoe.get('image') else None
+        print("Step 1")
+        image_str = mongo_shoe.get('image') if mongo_shoe.get('image') else None
+        print("Step 2")
         return {
             'code': mongo_shoe['code'],
             'loc': mongo_shoe.get('loc'),
@@ -24,6 +26,7 @@ class ShoeService:
         """Get all shoes from the database"""
         shoes = MongoShoeRepository.find_all()
         shoes = shoes[0:20]  # robust decision - we do not need to show more than first 20
+        print(type(shoes[0]))
         return [ShoeService.create_shoe_dto(shoe) for shoe in shoes]
     
     @staticmethod
