@@ -10,9 +10,7 @@ class ShoeService:
     @staticmethod
     def create_shoe_dto(mongo_shoe):
         """Convert a MongoDB shoe document to a DTO with base64 encoded image"""
-        print("Step 1")
         image_str = mongo_shoe.get('image') if mongo_shoe.get('image') else None
-        print("Step 2")
         return {
             'code': mongo_shoe['code'],
             'loc': mongo_shoe.get('loc'),
