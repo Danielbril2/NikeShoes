@@ -23,8 +23,8 @@ class ShoeService:
     def get_all_shoes():
         """Get all shoes from the database"""
         shoes = MongoShoeRepository.find_all()
-        shoes = shoes[0:20]  # robust decision - we do not need to show more than first 20
-        print(type(shoes[0]))
+        #shoes = shoes[0:20]  # robust decision - we do not need to show more than first 20
+        #print(type(shoes[0]))
         return [ShoeService.create_shoe_dto(shoe) for shoe in shoes]
     
     @staticmethod

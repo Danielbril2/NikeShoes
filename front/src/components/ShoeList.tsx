@@ -5,7 +5,8 @@ import { Search } from 'lucide-react';
 import { AuthAPI } from '../API/authAPI';
 
 const ShoeList = () => {
-  const [shoes, setShoes] = useState<Shoe[]>([]);
+  const [allShoes, setAllShoes] = useState<Shoe[]>([]); // Store all shoes from API
+  const [displayedShoes, setDisplayedShoes] = useState<Shoe[]>([]); // Store filtered/displayed shoes
   const [searchCode, setSearchCode] = useState('');
   const [searchName, setSearchName] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
@@ -14,6 +15,7 @@ const ShoeList = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // Fetch all shoes on initial load
   useEffect(() => {
     const loadShoes = async () => {
       try {
@@ -22,9 +24,12 @@ const ShoeList = () => {
           return;
         }
 
-        const allShoes = await ShoeAPI.getAllShoes();
-        setShoes(allShoes);
+        setLoading(true);
         setError(null);
+        
+        const fetchedShoes = await ShoeAPI.getAllShoes();
+        setAllShoes(fetchedShoes); // Store all shoes
+        setDisplayedShoes(fetchedShoes); // Initially display all shoes
       } catch (err) {
         console.error('Load error:', err);
         setError('נכשל בטעינת נעליים');
@@ -36,63 +41,95 @@ const ShoeList = () => {
     loadShoes();
   }, [navigate]);
 
-  const fetchShoeByCode = async (code: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const matchingShoes = await ShoeAPI.getShoeByCode(code);
-
-      if (matchingShoes && matchingShoes.length > 0) {
-        setShoes(matchingShoes);
-        setError(null);
-      } else {
-        setShoes([]);
+  // Filter shoes by code
+  const handleSearchByCode = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchCode) {
+      const filtered = allShoes.filter(shoe => 
+        shoe.code && shoe.code.startsWith(searchCode)
+      );
+      
+      setDisplayedShoes(filtered);
+      
+      if (filtered.length === 0) {
         setError('לא נמצאו נעליים עם המקט המבוקש');
-      }
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setError('הנעל לא נמצאה - נא לפנות למיקי עם דמעות בעיניים');
-      setShoes([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchShoesByLocation = async (location: number) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const matchingShoes = await ShoeAPI.getShoesByLocation(location);
-
-      if (matchingShoes && matchingShoes.length > 0) {
-        setShoes(matchingShoes);
-        setError(null);
       } else {
-        setShoes([]);
-        setError('לא נמצאו נעליים במיקום המבוקש');
+        setError(null);
       }
-    } catch (err) {
-      console.error('Fetch location error:', err);
-      setError('שגיאה בחיפוש לפי מיקום');
-      setShoes([]);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const fetchShoesByType = async (type: ShoeType) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const shoes = await ShoeAPI.getShoesByType(type);
-      setShoes(shoes);
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setError(`נכשל בטעינת נעלי ${getHebrewType(type)}`);
-      setShoes([]);
-    } finally {
-      setLoading(false);
+  // Filter shoes by name
+  const handleSearchByName = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchName) {
+      const filtered = allShoes.filter(shoe =>
+        shoe.name && shoe.name.toLowerCase().includes(searchName.toLowerCase())
+      );
+      
+      setDisplayedShoes(filtered);
+      
+      if (filtered.length === 0) {
+        setError('לא נמצאו נעליים עם השם המבוקש');
+      } else {
+        setError(null);
+      }
     }
+  };
+
+  // Filter shoes by location
+  const handleSearchByLocation = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchLocation) {
+      const locationNumber = parseInt(searchLocation, 10);
+      if (isNaN(locationNumber)) {
+        setError('מספר מיקום לא תקין');
+        return;
+      }
+      
+      const filtered = allShoes.filter(shoe => 
+        shoe.loc === locationNumber
+      );
+      
+      setDisplayedShoes(filtered);
+      
+      if (filtered.length === 0) {
+        setError('לא נמצאו נעליים במיקום המבוקש');
+      } else {
+        setError(null);
+      }
+    }
+  };
+
+  // Filter shoes by type
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const type = e.target.value as ShoeType | '';
+    setSelectedType(type);
+
+    if (type) {
+      const filtered = allShoes.filter(shoe => shoe.type === type);
+      setDisplayedShoes(filtered);
+      
+      if (filtered.length === 0) {
+        setError(`לא נמצאו נעלי ${getHebrewType(type as ShoeType)}`);
+      } else {
+        setError(null);
+      }
+    } else {
+      // If no type is selected, show all shoes
+      setDisplayedShoes(allShoes);
+      setError(null);
+    }
+  };
+
+  // Reset all filters and show all shoes
+  const handleResetSearch = () => {
+    setSearchCode('');
+    setSearchName('');
+    setSearchLocation('');
+    setSelectedType('');
+    setDisplayedShoes(allShoes);
+    setError(null);
   };
 
   const getHebrewType = (type: ShoeType): string => {
@@ -105,68 +142,6 @@ const ShoeList = () => {
         return 'ילדים';
       default:
         return type;
-    }
-  };
-
-  const handleSearchByCode = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchCode) {
-      fetchShoeByCode(searchCode);
-    }
-  };
-
-  const handleSearchByName = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchName) {
-      // Filter shoes locally by name
-      const filteredShoes = shoes.filter(shoe =>
-        shoe.name && shoe.name.toLowerCase().includes(searchName.toLowerCase())
-      );
-      setShoes(filteredShoes);
-      if (filteredShoes.length === 0) {
-        setError('לא נמצאו נעליים עם השם המבוקש');
-      }
-    }
-  };
-
-  const handleSearchByLocation = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchLocation) {
-      const locationNumber = parseInt(searchLocation, 10);
-      if (isNaN(locationNumber)) {
-        setError('מספר מיקום לא תקין');
-        return;
-      }
-      fetchShoesByLocation(locationNumber);
-    }
-  };
-
-  const handleTypeChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const type = e.target.value as ShoeType | '';
-    setSelectedType(type);
-
-    if (type) {
-      await fetchShoesByType(type as ShoeType);
-    } else {
-      handleResetSearch();
-    }
-  };
-
-  const handleResetSearch = async () => {
-    setSearchCode('');
-    setSearchName('');
-    setSearchLocation('');
-    setSelectedType('');
-    try {
-      setLoading(true);
-      const allShoes = await ShoeAPI.getAllShoes();
-      setShoes(allShoes);
-      setError(null);
-    } catch (err) {
-      console.error('Load shoes error:', err);
-      setError('נכשל בטעינת נעליים');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -260,7 +235,7 @@ const ShoeList = () => {
             </form>
           </div>
 
-          {/* Location Search - NEW */}
+          {/* Location Search */}
           <div>
             <form onSubmit={handleSearchByLocation}>
               <label className="block text-sm font-medium text-gray-700 mb-2">חיפוש לפי מיקום</label>
@@ -297,7 +272,7 @@ const ShoeList = () => {
             {selectedType && (
               <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium flex items-center">
                 סוג: {getHebrewType(selectedType as ShoeType)}
-                <button onClick={() => setSelectedType('')} className="mr-2 text-blue-500 hover:text-blue-700">
+                <button onClick={() => { setSelectedType(''); setDisplayedShoes(allShoes); }} className="mr-2 text-blue-500 hover:text-blue-700">
                   ×
                 </button>
               </div>
@@ -305,7 +280,7 @@ const ShoeList = () => {
             {searchCode && (
               <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium flex items-center">
                 מקט: {searchCode}
-                <button onClick={() => setSearchCode('')} className="mr-2 text-blue-500 hover:text-blue-700">
+                <button onClick={() => { setSearchCode(''); setDisplayedShoes(allShoes); }} className="mr-2 text-blue-500 hover:text-blue-700">
                   ×
                 </button>
               </div>
@@ -313,7 +288,7 @@ const ShoeList = () => {
             {searchName && (
               <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium flex items-center">
                 שם: {searchName}
-                <button onClick={() => setSearchName('')} className="mr-2 text-blue-500 hover:text-blue-700">
+                <button onClick={() => { setSearchName(''); setDisplayedShoes(allShoes); }} className="mr-2 text-blue-500 hover:text-blue-700">
                   ×
                 </button>
               </div>
@@ -321,7 +296,7 @@ const ShoeList = () => {
             {searchLocation && (
               <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium flex items-center">
                 מיקום: {searchLocation}
-                <button onClick={() => setSearchLocation('')} className="mr-2 text-blue-500 hover:text-blue-700">
+                <button onClick={() => { setSearchLocation(''); setDisplayedShoes(allShoes); }} className="mr-2 text-blue-500 hover:text-blue-700">
                   ×
                 </button>
               </div>
@@ -344,31 +319,42 @@ const ShoeList = () => {
 
       {/* Results Section */}
       <div className="mb-4">
-        <h2 className="text-xl font-bold text-gray-800 mb-2">תוצאות {shoes.length > 0 && `(${shoes.length})`}</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-2">
+          תוצאות {displayedShoes.length > 0 && `(${displayedShoes.length})`}
+        </h2>
         <div className="h-1 w-20 bg-blue-500 rounded"></div>
       </div>
 
-      {/* Results */}
-      {loading ? (
+      {/* Show custom loading with message */}
+      {loading && (
         <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-          <div className="animate-pulse flex flex-col items-center">
-            <div className="h-8 w-8 mb-4 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
-            <p className="text-gray-600">טוען נעליים...</p>
+          <p className="text-gray-600 mb-3">אם יונתן היה מוכן לשלם על שרת זה היה מהיר יותר</p>
+          <div className="relative h-4 w-64 bg-gray-200 rounded-full mx-auto overflow-hidden">
+            <div className="absolute top-0 left-0 h-full bg-blue-500 animate-pulse" style={{ width: '75%' }}></div>
           </div>
         </div>
-      ) : error ? (
+      )}
+
+      {/* Error message */}
+      {!loading && error && (
         <div className="text-center py-12 bg-white rounded-lg shadow-sm">
           <div className="text-red-500 mb-2">⚠️</div>
           <div className="text-red-500 font-medium">{error}</div>
         </div>
-      ) : shoes.length === 0 ? (
+      )}
+
+      {/* No results message */}
+      {!loading && !error && displayedShoes.length === 0 && (
         <div className="text-center py-12 bg-white rounded-lg shadow-sm">
           <div className="text-gray-400 mb-2">🔍</div>
           <div className="text-gray-500">לא נמצאו נעליים התואמות את החיפוש</div>
         </div>
-      ) : (
+      )}
+
+      {/* Results grid */}
+      {!loading && !error && displayedShoes.length > 0 && (
         <div className="shoe-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {shoes.map((shoe) => (
+          {displayedShoes.map((shoe) => (
             <div key={shoe.code} className="shoe-card bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
               <div className="aspect-ratio-box h-48 flex items-center justify-center bg-gray-50">
                 {shoe.image && (

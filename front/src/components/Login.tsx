@@ -8,52 +8,56 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [autoLoginChecked, setAutoLoginChecked] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    // Check if user was redirected from registration
-    if (location.state?.registered) {
-      setError('');
-      // Set a success message if coming from successful registration
-      const registrationMessage = document.getElementById('registration-success');
-      if (registrationMessage) {
-        registrationMessage.classList.remove('hidden');
-      }
-    }
-
-    // Try automatic login with stored token
-    const checkStoredToken = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (token && !autoLoginChecked) {
-          setAutoLoginChecked(true);
-          
-          // Verify the token is still valid
-          const isValid = await AuthAPI.verifyToken(token);
-          if (isValid) {
-            login(token);
-            navigate('/');
-          }
-        }
-      } catch (err) {
-        console.error('Auto-login error:', err);
-        // Token is invalid, we'll just show the login form
-        localStorage.removeItem('token');
-      }
-    };
-
-    checkStoredToken();
-  }, [login, navigate, location.state, autoLoginChecked]);
-
-  // If already authenticated, redirect to home
+  // Check if user is already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
+
+  // Check for registration success message
+  useEffect(() => {
+    if (location.state?.registered) {
+      setError('');
+      const registrationMessage = document.getElementById('registration-success');
+      if (registrationMessage) {
+        registrationMessage.classList.remove('hidden');
+      }
+    }
+  }, [location.state]);
+
+  // Attempt auto-login with stored token
+  useEffect(() => {
+    const autoLogin = async () => {
+      const token = localStorage.getItem('token');
+      if (token && !isAuthenticated) {
+        setLoading(true);
+        try {
+          const isValid = await AuthAPI.verifyToken(token);
+          if (isValid) {
+            login(token);
+            navigate('/');
+          } else {
+            // Clear invalid token
+            localStorage.removeItem('token');
+            setLoading(false);
+          }
+        } catch (err) {
+          console.error('Auto-login error:', err);
+          localStorage.removeItem('token');
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    autoLogin();
+  }, [login, navigate, isAuthenticated]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -66,12 +70,11 @@ const Login = () => {
       navigate('/');
     } catch (err) {
       setError('קוד עובד או סיסמה לא תקינים');
-    } finally {
       setLoading(false);
     }
   };
 
-  if (loading && !autoLoginChecked) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>

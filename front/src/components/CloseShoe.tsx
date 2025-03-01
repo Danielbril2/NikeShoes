@@ -5,26 +5,40 @@ import { ShoeAPI, Shoe, ShoeType } from '../API/RestAPI';
 const CloseShoes = () => {
   const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState<ShoeType | ''>('');
-  const [shoes, setShoes] = useState<Shoe[]>([]);
+  const [allShoes, setAllShoes] = useState<Shoe[]>([]); // All shoes from the backend
+  const [shoes, setShoes] = useState<Shoe[]>([]); // Filtered shoes by type
   const [missingShoes, setMissingShoes] = useState<Shoe[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showTypeSelection, setShowTypeSelection] = useState(true);
   const [showMissingList, setShowMissingList] = useState(false);
 
-  const fetchShoesByType = async (type: ShoeType) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const fetchedShoes = await ShoeAPI.getShoesByType(type);
-      setShoes(fetchedShoes);
-      setShowTypeSelection(false);
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setError(`נכשל בטעינת נעלי ${getHebrewType(type)}`);
-    } finally {
-      setLoading(false);
-    }
+  // Load all shoes at the beginning
+  useEffect(() => {
+    const fetchAllShoes = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const fetchedShoes = await ShoeAPI.getAllShoes();
+        setAllShoes(fetchedShoes);
+      } catch (err) {
+        console.error('Fetch error:', err);
+        setError('נכשל בטעינת נעליים');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllShoes();
+  }, []);
+
+  // Filter shoes by type locally
+  const handleTypeSelect = (type: ShoeType) => {
+    setSelectedType(type);
+    const filteredShoes = allShoes.filter(shoe => shoe.type === type);
+    setShoes(filteredShoes);
+    setShowTypeSelection(false);
+    setError(null);
   };
 
   const getHebrewType = (type: ShoeType): string => {
@@ -38,11 +52,6 @@ const CloseShoes = () => {
       default:
         return type;
     }
-  };
-
-  const handleTypeSelect = (type: ShoeType) => {
-    setSelectedType(type);
-    fetchShoesByType(type);
   };
 
   const markAsMissing = (shoe: Shoe) => {
@@ -83,8 +92,18 @@ const CloseShoes = () => {
         </div>
       )}
 
+      {/* Loading indicator with message */}
+      {loading && (
+        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+          <p className="text-gray-600 mb-3">אם יונתן היה מוכן לשלם על שרת זה היה מהיר יותר</p>
+          <div className="relative h-4 w-64 bg-gray-200 rounded-full mx-auto overflow-hidden">
+            <div className="absolute top-0 left-0 h-full bg-blue-500 animate-pulse" style={{ width: '75%' }}></div>
+          </div>
+        </div>
+      )}
+
       {/* Type Selection */}
-      {showTypeSelection && (
+      {!loading && showTypeSelection && (
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">בחר קטגוריה לסגירה</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -111,7 +130,7 @@ const CloseShoes = () => {
       )}
 
       {/* Shoes List for Checking */}
-      {!showTypeSelection && !showMissingList && (
+      {!loading && !showTypeSelection && !showMissingList && (
         <div>
           <div className="flex justify-between items-center mb-4">
             <div>
@@ -139,12 +158,7 @@ const CloseShoes = () => {
             </div>
           </div>
 
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p>טוען נעליים...</p>
-            </div>
-          ) : shoes.length === 0 ? (
+          {shoes.length === 0 ? (
             <div className="text-center py-12 bg-green-50 rounded-lg">
               <h3 className="text-xl font-bold text-green-800">הושלם!</h3>
               <p className="text-green-700 mt-2">
@@ -216,7 +230,7 @@ const CloseShoes = () => {
       )}
 
       {/* Missing Shoes List */}
-      {showMissingList && (
+      {!loading && showMissingList && (
         <div>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">

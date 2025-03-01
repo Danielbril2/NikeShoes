@@ -1,8 +1,8 @@
-// src/components/AuthProvider.tsx
 import React, { useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../API/AuthContext';
 import { AuthAPI } from '../API/authAPI';
+import Loading from './Loading';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -10,7 +10,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!localStorage.getItem('token'));
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
@@ -18,7 +18,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const verifyStoredToken = async () => {
       const storedToken = localStorage.getItem('token');
+      
       if (storedToken) {
+        setIsLoading(true);
         try {
           const isValid = await AuthAPI.verifyToken(storedToken);
           if (isValid) {
@@ -31,12 +33,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setIsAuthenticated(false);
           }
         } catch (err) {
+          console.error('Token verification error:', err);
           // In case of error, reset auth state
           localStorage.removeItem('token');
           setToken(null);
           setIsAuthenticated(false);
         }
+      } else {
+        // No token found
+        setIsAuthenticated(false);
       }
+      
       setIsLoading(false);
     };
 
@@ -59,8 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   if (isLoading) {
-    // You could show a loading indicator here
-    return null;
+    return <Loading />;
   }
 
   return (
