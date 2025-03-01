@@ -129,6 +129,7 @@ const AddShoe = () => {
           <input
             type="file"
             accept="image/*"
+            capture="environment"
             required
             className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
             onChange={handleImageChange}
